@@ -1,0 +1,17 @@
+# Ignore MacOS Sys file
+.DS_Store
+
+# Ignore R history file
+.Rhistory
+
+# Ignore environment config file 
+.venv/
+
+# Ignore credential files
+.env
+
+paper/ 
+
+literature/
+
+fitted_models/
