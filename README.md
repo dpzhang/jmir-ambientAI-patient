@@ -2,15 +2,13 @@
 
 Authors: Dongping Zhang; Mukund Nakhate; Cheryl Stults; Heather Himelhoch; Urmila Ravichandran; Prsni Patel; Anthony Solomonides; Sien Deng; Joseph Wilcox; Naveed Rabbani; Sachin Shah; Veena Jones; Nirav Shah
 
-Full Paper: Under-review
+Full Paper: Under review
 
 ## 1 About this repository
 
 This repository contains the analysis code and generated figures associated with the manuscript **"Ambient AI Scribe Implementation and Patient Experience Across Three Health Systems: A Multi-site Observational Study."**
 
 The underlying study data are not included because institutional policies restrict their public release. Fitted Bayesian model objects are also excluded because they are derived from the restricted data. Data may be shared upon reasonable request, subject to compliance with organizational agreements.
-
-This repository therefore provides the analysis code and generated figures, but not the restricted study data or fitted model objects.
 
 ## 2 Content
 
