@@ -6,28 +6,30 @@ fit_model = function(formula_obj, # model specification
                      prior_obj, # prior choice
                      prior_label, # prior type: weak, strong, default
                      model_name,
+                     family_obj = binomial(link = "logit"),
+                     likelihood_label = "binom",
                      chains = 4,
                      iter = 4000,
                      warmup = 2000,
                      cores = 4,
-                     seed = 42) {
-  
-  dir.create(file.path("fitted_models", prior_label),
-             recursive = TRUE, showWarnings = FALSE)
+                     seed = 42,
+                     control_lst = NULL,
+                     file_refit = "on_change") {
   
   brm(
     formula = formula_obj,
     data = data,
-    family = binomial(link = "logit"),
+    family = family_obj,
     prior = prior_obj,
     chains = chains,
     iter = iter,
     warmup = warmup,
+    sample_prior = "yes",
     cores = cores,
     seed = seed,
-    #control = control_lst,
-    file_refit = "on_change",
-    file = file.path("fitted_models", prior_label, model_name)
+    control = control_lst,
+    file_refit = file_refit,
+    file = file.path("fitted_models", likelihood_label, prior_label, model_name)
   )
 }
 
@@ -37,6 +39,10 @@ fit_model = function(formula_obj, # model specification
 fit_model_grid = function(model_formulas,
                           prior_list,
                           data,
+                          family_obj = binomial(link = "logit"),
+                          likelihood_label = "binom",
+                          control_lst = NULL,
+                          file_refit = "on_change",
                           save_list = TRUE,
                           save_path = "fitted_models/fitted_models.rds") {
   
@@ -58,7 +64,11 @@ fit_model_grid = function(model_formulas,
         data = data,
         prior_obj = prior_list[[prior_label]],
         prior_label = prior_label,
-        model_name = model_name
+        model_name = model_name,
+        family_obj = family_obj,
+        likelihood_label = likelihood_label,
+        control_lst = control_lst,
+        file_refit = file_refit
       )
     }
   }
