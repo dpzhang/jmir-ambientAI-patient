@@ -13,9 +13,9 @@ PRIOR_LIST_BINOM = list(
 PRIOR_LIST_BBINOM = list(
   moderate = c(brms::prior(lognormal(log(100), 1), class = "phi"),
                PRIOR_LIST_BINOM$default),
-  low = c(brms::prior(lognormal(log(50), 1), class = "phi"),
+  lower = c(brms::prior(lognormal(log(50), 1), class = "phi"),
           PRIOR_LIST_BINOM$default),
-  high = c(brms::prior(lognormal(log(200), 1), class = "phi"),
+  higher = c(brms::prior(lognormal(log(200), 1), class = "phi"),
            PRIOR_LIST_BINOM$default)
 )
 
@@ -50,9 +50,15 @@ MODEL_FORMULAS_BASELINE = MODEL_FORMULAS[c("ltr_base", "exp_base")]
 # Repository paths
 ########################################
 REPO_ROOT = dirname(this.path::this.dir())
-DATA_FILE = file.path(REPO_ROOT, "data", "model_output.rds")
-TABLE_DIR = file.path(REPO_ROOT, "tables")
-FIGURE_DIR = file.path(REPO_ROOT, "figures")
+OUTPUT_DIR = Sys.getenv("OUTPUT_DIR", file.path(REPO_ROOT, "output"))
+MODEL_OUTPUT_DIR = file.path(OUTPUT_DIR, "model_outputs")
+DATA_FILE = file.path(MODEL_OUTPUT_DIR, "model_output.rds")
+TABLE_DIR = file.path(OUTPUT_DIR, "tables")
+FIGURE_DIR = file.path(OUTPUT_DIR, "figures")
+FIT_DIR = file.path(OUTPUT_DIR, "model_fits")
+for (path in c(MODEL_OUTPUT_DIR, TABLE_DIR, FIGURE_DIR)) {
+  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+}
 
 ########################################
 # Diagnostic settings

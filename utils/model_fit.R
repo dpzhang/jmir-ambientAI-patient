@@ -16,7 +16,8 @@ fit_model = function(formula_obj, # model specification
                      control_lst = NULL,
                      file_refit = "on_change") {
   
-  brm(
+  dir.create(file.path(FIT_DIR, likelihood_label, prior_label), recursive = TRUE, showWarnings = FALSE)
+  brms::brm(
     formula = formula_obj,
     data = data,
     family = family_obj,
@@ -29,7 +30,7 @@ fit_model = function(formula_obj, # model specification
     seed = seed,
     control = control_lst,
     file_refit = file_refit,
-    file = file.path("fitted_models", likelihood_label, prior_label, model_name)
+    file = file.path(FIT_DIR, likelihood_label, prior_label, model_name)
   )
 }
 
@@ -44,7 +45,7 @@ fit_model_grid = function(model_formulas,
                           control_lst = NULL,
                           file_refit = "on_change",
                           save_list = TRUE,
-                          save_path = "fitted_models/fitted_models.rds") {
+                          save_path = file.path(FIT_DIR, "fitted_models.rds")) {
   
   fitted_models = list()
   
@@ -79,4 +80,24 @@ fit_model_grid = function(model_formulas,
   }
   
   return(fitted_models)
+}
+# Explicit coding preserves the original Endeavor reference site.
+read_model_data = function(path) {
+  data = read.csv(path)
+  counts = c("ltr_top", "ltr_total", "exp_top", "exp_total")
+  required = c(counts, "site", "period", "pct_old_10", "pct_heavy_10")
+  stopifnot(all(required %in% names(data)), nrow(data) == 6L,
+            !anyNA(data[required]),
+            setequal(data$site, c("Endeavor", "UCM", "Sutter")),
+            setequal(data$period, c("pre", "post")),
+            !anyDuplicated(data[c("site", "period")]))
+  stopifnot(all(vapply(data[c(counts, "pct_old_10", "pct_heavy_10")],
+                      function(x) is.numeric(x) && all(is.finite(x)), logical(1))))
+  stopifnot(all(as.matrix(data[counts]) >= 0),
+            all(as.matrix(data[counts]) == floor(as.matrix(data[counts]))),
+            all(data$ltr_total > 0), all(data$exp_total > 0),
+            all(data$ltr_top <= data$ltr_total), all(data$exp_top <= data$exp_total))
+  data$site = factor(data$site, levels = c("Endeavor", "UCM", "Sutter"))
+  data$period = factor(data$period, levels = c("pre", "post"))
+  data
 }

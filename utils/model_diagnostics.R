@@ -162,7 +162,19 @@ plot_bbinom_trace = function(bbinom_trace_df) {
 ########################################
 # Predictive distributions
 ########################################
+build_observed_rates = function(data) {
+  map_dfr(names(OUTCOME_LABELS), function(outcome) {
+    tibble(
+      site = as.character(data$site),
+      period = as.character(data$period),
+      Outcome = OUTCOME_LABELS[[outcome]],
+      obs_rate = data[[paste0(outcome, "_top")]] / data[[paste0(outcome, "_total")]]
+    )
+  })
+}
+
 plot_binom_predictive = function(ppc_data) {
+  observed = distinct(ppc_data, Outcome, model, period, site, obs_rate)
   ggplot(ppc_data, aes(x = site, y = pred_rate)) +
     stat_slabinterval(
       aes(
@@ -181,6 +193,16 @@ plot_binom_predictive = function(ppc_data) {
       slab_linewidth = 0.2,
       scale = 0.7,
       show.legend = FALSE
+    ) +
+    geom_point(
+      data = observed,
+      aes(x = site, y = obs_rate),
+      inherit.aes = FALSE,
+      shape = 21,
+      fill = "white",
+      color = "black",
+      size = 1.1,
+      stroke = 0.5
     ) +
     ggh4x::facet_nested(
       Outcome ~ model + period,
@@ -249,6 +271,7 @@ plot_binom_predictive = function(ppc_data) {
 }
 
 plot_bbinom_predictive = function(ppc_data, y_limits = BBINOM_PREDICTIVE_LIMITS) {
+  observed = distinct(ppc_data, Outcome, prior, period, site, obs_rate)
   ggplot(ppc_data, aes(x = prior, y = pred_rate)) +
     stat_slabinterval(
       aes(
@@ -270,6 +293,17 @@ plot_bbinom_predictive = function(ppc_data, y_limits = BBINOM_PREDICTIVE_LIMITS)
       slab_linewidth = 0.2,
       scale = 0.7,
       show.legend = FALSE
+    ) +
+    geom_point(
+      data = observed,
+      aes(x = prior, y = obs_rate, group = site),
+      inherit.aes = FALSE,
+      position = position_dodge(width = 0.60),
+      shape = 21,
+      fill = "white",
+      color = "black",
+      size = 1.2,
+      stroke = 0.5
     ) +
     facet_grid(
       Outcome ~ period,
@@ -346,20 +380,80 @@ plot_bbinom_predictive = function(ppc_data, y_limits = BBINOM_PREDICTIVE_LIMITS)
 
 
 plot_site_legend = function() {
-  sites = tibble(site = factor(names(TABLEAU10_SITE), levels = names(TABLEAU10_SITE)), x = seq_along(TABLEAU10_SITE))
-  ggplot(sites, aes(x, 1)) +
-    geom_point(aes(fill = site), shape = 22, size = 3, show.legend = FALSE) +
-    geom_text(aes(label = site), nudge_x = 0.12, hjust = 0, size = 3.2) +
-    annotate("text", x = 0.35, y = 1, label = "Site", fontface = "bold", size = 3.2) +
-    scale_fill_manual(values = TABLEAU10_SITE) +
-    coord_cartesian(xlim = c(0.2, 3.7), ylim = c(0.8, 1.2), clip = "off") +
-    theme_void() + theme(plot.margin = margin(0, 0, 0, 0))
+  site_key = tibble(
+    x = c(1.05, 2.20, 3.35),
+    y = 1,
+    site = factor(names(TABLEAU10_SITE), levels = names(TABLEAU10_SITE)),
+    site_label = SITE_DISPLAY_LABELS[as.character(site)]
+  )
+
+  ggplot() +
+    annotate(
+      "text",
+      x = 0.25,
+      y = 1,
+      label = "Site",
+      fontface = "bold",
+      size = 3.2,
+      hjust = 0,
+      vjust = 0.5
+    ) +
+    geom_point(
+      data = site_key,
+      aes(x = x, y = y, fill = site),
+      shape = 22,
+      color = "black",
+      size = 3.0,
+      stroke = 0.5
+    ) +
+    geom_text(
+      data = site_key,
+      aes(x = x + 0.18, y = y, label = site_label),
+      hjust = 0,
+      vjust = 0.5,
+      size = 3.2
+    ) +
+    annotate(
+      "segment",
+      x = 4.40,
+      xend = 4.40,
+      y = 0.78,
+      yend = 1.22,
+      linewidth = 0.3,
+      color = "grey45"
+    ) +
+    annotate(
+      "point",
+      x = 4.85,
+      y = 1,
+      shape = 21,
+      fill = "white",
+      color = "black",
+      size = 3.0,
+      stroke = 0.6
+    ) +
+    annotate(
+      "text",
+      x = 5.10,
+      y = 1,
+      label = "Observed data",
+      hjust = 0,
+      vjust = 0.5,
+      size = 3.2
+    ) +
+    scale_fill_manual(values = TABLEAU10_SITE, labels = SITE_DISPLAY_LABELS) +
+    coord_cartesian(xlim = c(0.15, 6.65), ylim = c(0.70, 1.30), clip = "off") +
+    theme_void(base_size = 12) +
+    theme(
+      legend.position = "none",
+      plot.margin = margin(0, 0, 0, 0)
+    )
 }
 
-combine_predictive_figure = function(plot) {
+combine_predictive_figure = function(plot, legend_height = 0.10) {
   label = patchwork::wrap_elements(full = grid::textGrob(
     "Predicted Top-box Rate", rot = 90, gp = grid::gpar(fontsize = 10)))
-  label + (plot / plot_site_legend() + plot_layout(heights = c(1, 0.10))) +
+  label + (plot / plot_site_legend() + plot_layout(heights = c(1, legend_height))) +
     plot_layout(widths = c(0.035, 1)) &
     theme(plot.margin = margin(0, 0, 0, 0), plot.background = element_rect(fill = "white", color = NA))
 }

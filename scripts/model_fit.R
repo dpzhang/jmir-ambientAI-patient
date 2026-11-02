@@ -4,14 +4,13 @@ library(dplyr)
 ########################################
 # Presets
 ########################################
-source("utils/global.R")
-source("utils/model_fit.R")
-model_df = read.csv('data/model.csv') %>%
-  mutate(site = factor(site), 
-         period = factor(period, levels = c("pre", "post")))
+source(file.path(this.path::this.dir(), "..", "utils", "global.R"))
+source(file.path(REPO_ROOT, "utils", "model_fit.R"))
+dir.create(FIT_DIR, recursive = TRUE, showWarnings = FALSE)
+model_df = read_model_data(file.path(REPO_ROOT, "data", "data.csv"))
 
 ########################################
-# Model fit and export
+# Model fit
 ########################################
 FITTED_MODELS = list()
 FITTED_MODELS$binom = fit_model_grid(

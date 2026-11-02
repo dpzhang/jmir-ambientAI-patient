@@ -18,6 +18,10 @@ library(tidybayes)
 source(file.path(this.path::this.dir(), "..", "utils", "global.R"))
 source(file.path(REPO_ROOT, "utils", "model_diagnostics.R"))
 model_output = readRDS(DATA_FILE)
+source(file.path(REPO_ROOT, "utils", "model_fit.R"))
+observed_rates = build_observed_rates(
+  read_model_data(file.path(REPO_ROOT, "data", "data.csv"))
+)
 
 ########################################
 # Model diagnostics table
@@ -79,6 +83,7 @@ binom_predictive_df = imap_dfr(MODEL_LABELS, function(model_label, model_key) {
       mutate(model = model_label, Outcome = outcome_label)
   })
 }) %>%
+  left_join(observed_rates, by = c("site", "period", "Outcome"), relationship = "many-to-one") %>%
   mutate(model = factor(model, levels = unname(MODEL_LABELS)),
          Outcome = factor(Outcome, levels = unname(OUTCOME_LABELS)),
          site = factor(site, levels = names(TABLEAU10_SITE)),
@@ -95,12 +100,15 @@ bbinom_predictive_df = imap_dfr(OUTCOME_LABELS, function(outcome_label, outcome_
       mutate(prior = PRIOR_LABELS$bbinom[[prior_key]], Outcome = outcome_label)
   })
 }) %>%
+  left_join(observed_rates, by = c("site", "period", "Outcome"), relationship = "many-to-one") %>%
   mutate(prior = factor(prior, levels = PRIOR_LABELS$bbinom[bbinom_prior_order]),
          Outcome = factor(Outcome, levels = unname(OUTCOME_LABELS)),
          site = factor(site, levels = names(TABLEAU10_SITE)),
          period = factor(period, levels = c("pre", "post"),
                          labels = c("Pre-Implementation", "Post-Implementation")))
-p_predictive_bbinom = combine_predictive_figure(plot_bbinom_predictive(bbinom_predictive_df))
+p_predictive_bbinom = combine_predictive_figure(
+  plot_bbinom_predictive(bbinom_predictive_df), legend_height = 0.08
+)
 save_diagnostic_figure(p_predictive_bbinom, "ppc_bbinom.png")
 
 ########################################
